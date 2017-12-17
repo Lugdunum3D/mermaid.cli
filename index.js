@@ -22,9 +22,16 @@ commander
   .option('-b, --backgroundColor [backgroundColor]', 'Background color. Example: transparent, red, \'#F0F0F0\'. Optional. Default: white')
   .option('-c, --configFile [config]', 'JSON configuration file for mermaid. Optional')
   .option('-C, --cssFile [cssFile]', 'CSS alternate file for mermaid. Optional')
+  .option('--disable-sandbox','Disable chrome sandbox (warning: insecure)')
   .parse(process.argv)
 
-let { theme, width, height, input, output, backgroundColor, configFile, cssFile } = commander
+let { theme, width, height, input, output, backgroundColor, configFile, cssFile, disableSandbox } = commander
+
+const puppeteerArgs = {}
+
+if (disableSandbox) {
+  puppeteerArgs.args = ['--no-sandbox', '--disable-suid-sandbox']
+}
 
 // check input file
 if (!input) {
@@ -68,7 +75,7 @@ height = parseInt(height)
 backgroundColor = backgroundColor || 'white'
 
 ;(async () => {
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch(puppeteerArgs)
   const page = await browser.newPage()
   page.setViewport({ width, height })
   await page.goto(`file://${path.join(__dirname, 'index.html')}`)
@@ -78,7 +85,7 @@ backgroundColor = backgroundColor || 'white'
   const definition = fs.readFileSync(input, 'utf-8')
 
   var myconfig, myCSS
-  
+
   if (configFile) {
     myconfig = JSON.parse(fs.readFileSync(configFile, 'utf-8'))
   }
